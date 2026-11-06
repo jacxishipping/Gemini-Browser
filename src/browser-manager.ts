@@ -17,6 +17,15 @@ export const BROWSER_ENGINES = ['chromium', 'firefox', 'webkit'] as const;
 export type BrowserEngine = (typeof BROWSER_ENGINES)[number];
 export type WaitUntil = 'load' | 'domcontentloaded' | 'networkidle';
 
+/**
+ * Headed browsers cannot start on a Linux host without a display (typical servers), so fall back to\n * headless there. Set BROWSER_FORCE_HEADLESS=true to force headless anywhere.\n */
+function effectiveHeadless(requested: boolean): boolean {
+  if (requested || process.env.BROWSER_FORCE_HEADLESS?.toLowerCase() === 'true') {
+    return true;
+  }
+  return process.platform === 'linux' && !process.env.DISPLAY && !process.env.WAYLAND_DISPLAY;
+}
+
 const ENGINE_TYPES: Record<BrowserEngine, BrowserType> = {
   chromium,
   firefox,
@@ -255,7 +264,7 @@ export class BrowserManager {
         }
       } else {
         browser = await ENGINE_TYPES[engine].launch({
-          headless: request.headless,
+          headless: effectiveHeadless(request.headless),
           timeout: 60_000,
           ...(request.channel ? { channel: request.channel } : {}),
           ...(request.executablePath ? { executablePath: request.executablePath } : {}),
@@ -334,7 +343,7 @@ export class BrowserManager {
       const tabs = await this.listTabs();
       return {
         engine,
-        headless: attached ? false : request.headless,
+        headless: attached ? false : effectiveHeadless(request.headless),
         attachedOverCdp: attached,
         viewport: attached ? null : { width: request.viewportWidth, height: request.viewportHeight },
         activeTabId: this.activeTabId ?? null,
