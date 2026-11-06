@@ -65,6 +65,8 @@ Options:
 
 Environment:
   MCP_HTTP_TOKEN             When set, require "Authorization: Bearer <token>" on HTTP requests
+                             (also enables built-in OAuth 2.1; the token is the approval passcode)
+  MCP_PUBLIC_URL             Public base URL used as the OAuth issuer (e.g. https://browser.example.com)
   BROWSER_RECORDINGS_DIR     Directory for videos and traces (default: ./.recordings)
   LOG_LEVEL                  debug | info | warn | error | silent (default: info)`;
 
@@ -230,6 +232,7 @@ async function runHttp(config: CliConfig): Promise<RunningHttpServer> {
     port: config.port,
     path: config.path,
     ...(process.env.MCP_HTTP_TOKEN ? { authToken: process.env.MCP_HTTP_TOKEN } : {}),
+    ...(process.env.MCP_PUBLIC_URL ? { publicUrl: process.env.MCP_PUBLIC_URL.trim() } : {}),
     ...(config.corsOrigin ? { corsOrigin: config.corsOrigin } : {}),
     enableLegacySse: config.legacySse,
     createServer: createMcpServer

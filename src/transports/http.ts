@@ -5,6 +5,7 @@ import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/
 import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
 import { isInitializeRequest } from '@modelcontextprotocol/sdk/types.js';
 import { logger } from '../logger.js';
+import { OAuthProvider } from './oauth.js';
 
 const MAX_BODY_BYTES = 10 * 1024 * 1024;
 
@@ -32,6 +33,8 @@ export interface HttpTransportOptions {
   port: number;
   path: string;
   authToken?: string;
+  /** Public base URL (e.g. https://browser.example.com) used as the OAuth issuer. */
+  publicUrl?: string;
   corsOrigin?: string;
   enableLegacySse: boolean;
   createServer: () => McpServer;
@@ -128,6 +131,10 @@ export async function startHttpServer(options: HttpTransportOptions): Promise<Ru
   const mcpPath = options.path.endsWith('/') && options.path !== '/'
     ? options.path.slice(0, -1)
     : options.path;
+
+  const oauth = options.authToken
+    ? new OAuthProvider({ secret: options.authToken, publicUrl: options.publicUrl, mcpPath })
+    : undefined;
 
   const createStreamableSession = async (): Promise<StreamableSession> => {
     const server = options.createServer();
@@ -294,8 +301,19 @@ export async function startHttpServer(options: HttpTransportOptions): Promise<Ru
       return;
     }
 
-    if (!isAuthorized(req, url, options.authToken)) {
-      res.setHeader('WWW-Authenticate', 'Bearer');
+    if (oauth && (await oauth.handle(req, res, url))) {
+      return;
+    }
+
+    const bearer = req.headers.authorization?.startsWith('Bearer ')
+      ? req.headers.authorization.slice('Bearer '.length)
+      : undefined;
+    const oauthOk = oauth !== undefined && bearer !== undefined && oauth.isValidAccessToken(bearer);
+    if (!oauthOk && !isAuthorized(req, url, options.authToken)) {
+      res.setHeader(
+        'WWW-Authenticate',
+        oauth ? `Bearer resource_metadata="${oauth.resourceMetadataUrl(req)}"` : 'Bearer'
+      );
       sendJson(res, 401, { error: 'Unauthorized.' });
       return;
     }
