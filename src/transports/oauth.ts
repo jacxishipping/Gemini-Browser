@@ -79,7 +79,9 @@ function html(res: ServerResponse, status: number, body: string): void {
     'Content-Type': 'text/html; charset=utf-8',
     'Cache-Control': 'no-store',
     'X-Frame-Options': 'DENY',
-    'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'"
+    // No form-action directive: Chrome enforces it on the post-submit redirect to the client's
+    // callback URL (a different origin), which would block the OAuth redirect.
+    'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'none'"
   });
   res.end(body);
 }
