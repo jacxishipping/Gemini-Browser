@@ -1,0 +1,49 @@
+{
+  "name": "gemini-browser-mcp",
+  "version": "1.0.0",
+  "description": "Production-grade MCP server for launching, inspecting, and controlling a real web browser via Playwright/CDP.",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "main": "./dist/server.js",
+  "bin": {
+    "gemini-browser-mcp": "./dist/server.js"
+  },
+  "files": [
+    "dist",
+    "claude_desktop_config.json",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "start": "node dist/server.js",
+    "start:http": "node dist/server.js --transport http",
+    "dev": "tsx src/server.ts",
+    "smoke": "npm run build && node scripts/smoke-test.mjs",
+    "install-browsers": "playwright install chromium",
+    "install-browsers:all": "playwright install",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "playwright",
+    "browser",
+    "automation",
+    "cdp",
+    "claude"
+  ],
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "playwright": "^1.65.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3"
+  }
+}

@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.recordings/
+*.log
+.env
+.DS_Store
+
+*.pem

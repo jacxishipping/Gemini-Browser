@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "gemini-browser": {
+      "command": "node",
+      "args": [
+        "C:/Users/Administrator/Desktop/Gemini-Browser/dist/server.js"
+      ],
+      "env": {
+        "LOG_LEVEL": "info",
+        "BROWSER_RECORDINGS_DIR": "C:/Users/Administrator/Desktop/Gemini-Browser/.recordings"
+      }
+    }
+  }
+}
